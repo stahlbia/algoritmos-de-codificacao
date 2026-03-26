@@ -10,5 +10,6 @@ black>=23.0.0
 flake8>=6.0.0
 mypy>=1.5.0
 
-# Optional GUI dependencies (uncomment if needed)
-# tkinter is included in standard Python installation
+# GUI dependencies
+customtkinter>=5.2.2
+# tkinter is included in the standard Python installation
