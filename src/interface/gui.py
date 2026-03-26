@@ -231,7 +231,6 @@ class EncoderApp(customtkinter.CTk):
     def _on_operation_change(self):
         """Clear input and output whenever the user switches encode ↔ decode."""
         self._input_box.delete("1.0", "end")
-        self._clear_output()
         self._clear_error()
 
     def _change_scaling(self, value: str):
