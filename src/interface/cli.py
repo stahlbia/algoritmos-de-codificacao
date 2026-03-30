@@ -5,6 +5,7 @@ Command-line interface for encoding algorithms.
 import sys
 from typing import Optional
 from src.encoders import golomb, elias_gamma, fibonacci, huffman
+from src.decoders import huffman_decoder
 
 
 class EncoderCLI:
@@ -151,7 +152,7 @@ class EncoderCLI:
                     char, code = pair.split(':', 1)
                     codes[char] = code
 
-            huffman.decode(binary, codes)
+            huffman_decoder.decode(binary, codes)
 
         elif self.current_algo == 'Golomb':
             golomb.decode(binary, m=self.golomb_m)

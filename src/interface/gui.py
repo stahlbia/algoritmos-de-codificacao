@@ -20,6 +20,7 @@ from io import StringIO
 import customtkinter
 from src.encoders import golomb, elias_gamma, fibonacci, huffman
 from src.decoders import golomb_decoder
+from src.decoders import huffman_decoder 
 
 # ── default appearance ────────────────────────────────────────────────
 customtkinter.set_appearance_mode("Dark")
@@ -345,7 +346,7 @@ class EncoderApp(customtkinter.CTk):
                 )
             if not all(c in "01" for c in binary):
                 raise ValueError("Código binário inválido — use apenas 0 e 1.")
-            huffman.decode(binary, codes)
+            huffman_decoder.decode(binary, codes) 
         else:
             binary = raw.replace(" ", "")
             if not all(c in "01" for c in binary):

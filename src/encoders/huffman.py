@@ -1,9 +1,96 @@
 """
 Huffman encoding implementation.
-TODO: implement encoding and decoding logic.
+
+Fluxo:
+  1. Calcular frequência de cada caractere do texto
+  2. Construir a árvore de Huffman (min-heap)
+  3. Gerar a tabela de códigos (percorrer árvore)
+  4. Codificar o texto usando a tabela
 """
 
-from typing import Dict, Optional, Tuple
+import heapq
+from collections import Counter
+from typing import Dict, List, Optional, Tuple
+
+
+class HuffmanNode:
+    """Nó da árvore de Huffman."""
+
+    def __init__(self, char: Optional[str], freq: int,
+                 left: Optional["HuffmanNode"] = None,
+                 right: Optional["HuffmanNode"] = None):
+        self.char = char
+        self.freq = freq
+        self.left = left
+        self.right = right
+
+    def __lt__(self, other: "HuffmanNode") -> bool:
+        return self.freq < other.freq
+
+
+def _validate_text(text: str) -> str:
+    if not isinstance(text, str):
+        raise TypeError("A entrada deve ser uma string.")
+    if not text:
+        raise ValueError("O texto não pode estar vazio.")
+    return text
+
+
+def build_frequency_table(text: str) -> Dict[str, int]:
+    """Retorna dicionário {caractere: frequência}."""
+    return dict(Counter(text))
+
+
+def build_tree(freq_table: Dict[str, int]) -> HuffmanNode:
+    """
+    Constrói a árvore de Huffman a partir da tabela de frequências.
+
+    Retorna o nó raiz.
+    """
+    if not freq_table:
+        raise ValueError("Tabela de frequências vazia.")
+
+    heap: List[HuffmanNode] = [
+        HuffmanNode(char=ch, freq=f) for ch, f in freq_table.items()
+    ]
+    heapq.heapify(heap)
+
+    if len(heap) == 1:
+        node = heapq.heappop(heap)
+        return HuffmanNode(char=None, freq=node.freq, left=node, right=None)
+
+    while len(heap) > 1:
+        left = heapq.heappop(heap)
+        right = heapq.heappop(heap)
+        merged = HuffmanNode(
+            char=None,
+            freq=left.freq + right.freq,
+            left=left,
+            right=right,
+        )
+        heapq.heappush(heap, merged)
+
+    return heap[0]
+
+
+def build_code_table(root: HuffmanNode) -> Dict[str, str]:
+    """
+    Percorre a árvore e gera {caractere: código_binário}.
+    Esquerda = '0', Direita = '1'.
+    """
+    codes: Dict[str, str] = {}
+
+    def _traverse(node: Optional[HuffmanNode], prefix: str) -> None:
+        if node is None:
+            return
+        if node.char is not None:
+            codes[node.char] = prefix if prefix else "0"
+            return
+        _traverse(node.left, prefix + "0")
+        _traverse(node.right, prefix + "1")
+
+    _traverse(root, "")
+    return codes
 
 
 def encode(text: str) -> Tuple[str, Dict[str, str]]:
@@ -16,35 +103,19 @@ def encode(text: str) -> Tuple[str, Dict[str, str]]:
     Returns:
         Tuple of (encoded binary string, code table dictionary)
     """
-    print("[Huffman] encode() chamado")
-    print(f"  entrada: '{text}'")
-    print("  TODO: implementar codificação Huffman")
-    print("  1. Calcular a frequência de cada símbolo no texto")
-    print("  2. Criar um nó folha para cada símbolo")
-    print("  3. Construir a árvore de Huffman usando uma fila de prioridade (min-heap):")
-    print("     - Retirar os dois nós de menor frequência")
-    print("     - Criar um nó interno com a soma das frequências")
-    print("     - Repetir até restar um único nó (raiz)")
-    print("  4. Gerar os códigos percorrendo a árvore (esquerda=0, direita=1)")
-    print("  5. Codificar o texto substituindo cada símbolo pelo seu código")
+    text = _validate_text(text)
 
+    freq_table = build_frequency_table(text)
+    tree = build_tree(freq_table)
+    code_table = build_code_table(tree)
 
-def decode(binary: str, codes: Dict[str, str]) -> str:
-    """
-    Decode Huffman encoded binary string.
+    encoded = "".join(code_table[ch] for ch in text)
 
-    Args:
-        binary: Binary string to decode
-        codes: Code table mapping characters to their binary codes
+    print(f"Texto original : {text}")
+    print(f"Frequências    : {freq_table}")
+    print(f"Tabela de codes: {code_table}")
+    print(f"Binário        : {encoded}")
+    print(f"Bits totais    : {len(encoded)}")
+    print(f"Taxa           : {len(encoded) / len(text):.2f} bits/símbolo")
 
-    Returns:
-        Decoded text string
-    """
-    print("[Huffman] decode() chamado")
-    print(f"  entrada binária: {binary}")
-    print(f"  tabela de códigos: {codes}")
-    print("  TODO: implementar decodificação Huffman")
-    print("  1. Inverter a tabela de códigos (código -> símbolo)")
-    print("  2. Percorrer a string binária bit a bit, acumulando bits")
-    print("  3. Quando o acumulado coincidir com um código, emitir o símbolo")
-    print("  4. Repetir até consumir toda a string binária")
+    return encoded, code_table
