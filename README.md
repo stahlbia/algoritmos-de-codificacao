@@ -220,16 +220,16 @@ algoritmos-de-codificacao/
 │   ├── __init__.py
 │   ├── encoders/
 │   │   ├── __init__.py
-│   │   ├── base_encoder.py      # Classe base abstrata
+│   │   ├── base_encoder.py       # Classe base abstrata
 │   │   ├── golomb.py             # Implementação Golomb
 │   │   ├── elias_gamma.py        # Implementação Elias-Gamma
 │   │   ├── fibonacci.py          # Implementação Fibonacci
 │   │   └── huffman.py            # Implementação Huffman
 │   ├── decoders/
-│   │   ├── elias_gamma_decoder.py      # Classe base abstrata
-│   │   ├── fibonacci_decoder.py             # Implementação Golomb
-│   │   ├── golomb_decoder.py        # Implementação Elias-Gamma
-│   │   └── huffman_decoder.py            # Implementação Huffman
+│   │   ├── elias_gamma_decoder.py      
+│   │   ├── fibonacci_decoder.py             
+│   │   ├── golomb_decoder.py        
+│   │   └── huffman_decoder.py            
 │   ├── interface/
 │   │   ├── __init__.py
 │   │   ├── gui.py 
