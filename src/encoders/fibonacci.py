@@ -1,45 +1,63 @@
 """
-Fibonacci/Zeckendorf encoding implementation.
-TODO: implement encoding and decoding logic.
+Fibonacci (Zeckendorf) encoding implementation.
+
+Recebe uma lista de inteiros positivos e converte para código Fibonacci.
 """
 
-from typing import Union, List
+from typing import List, Union
+from src.decoders.fibonacci_decoder import decode
 
+def _validate_numbers(numbers: Union[str, List[int]]) -> List[int]:
+    if isinstance(numbers, str):
+        try:
+            numbers = [int(x.strip()) for x in numbers.split() if x.strip()]
+        except ValueError:
+            raise TypeError("A entrada deve conter apenas números inteiros separados por espaço.")
+            
+    if not isinstance(numbers, list) or not numbers:
+        raise ValueError("A entrada não pode estar vazia.")
+        
+    for n in numbers:
+        if not isinstance(n, int) or n <= 0:
+            raise ValueError(f"Valor inválido: '{n}'. Fibonacci exige inteiros maiores que zero.")
+            
+    return numbers
 
-def encode(numbers: Union[int, List[int]]) -> str:
+def encode(numbers: Union[str, List[int]]) -> str:
     """
-    Encode integer(s) using Fibonacci/Zeckendorf coding.
+    Encode numbers using Fibonacci/Zeckendorf algorithm.
 
     Args:
-        numbers: Single positive integer or list of positive integers
+        numbers: String formatada com espaços ou Lista de inteiros a serem codificados.
 
     Returns:
-        Binary string representation with '11' terminators
+        Encoded binary string ending with terminator '11'.
     """
-    print("[Fibonacci/Zeckendorf] encode() chamado")
-    print(f"  entrada: {numbers}")
-    print("  TODO: implementar codificação Fibonacci/Zeckendorf")
-    print("  1. Gerar a sequência de Fibonacci: 1, 2, 3, 5, 8, 13, ...")
-    print("  2. Para cada número n, encontrar a representação de Zeckendorf")
-    print("     (soma de números de Fibonacci não consecutivos) usando algoritmo guloso")
-    print("  3. Representar como string de bits (1 = usa aquele Fibonacci, 0 = não usa)")
-    print("  4. Adicionar terminador '11' ao final de cada código")
-
-
-def decode(binary: str) -> List[int]:
-    """
-    Decode Fibonacci encoded binary string.
-
-    Args:
-        binary: Binary string to decode (with '11' terminators)
-
-    Returns:
-        List of decoded positive integers
-    """
-    print("[Fibonacci/Zeckendorf] decode() chamado")
-    print(f"  entrada binária: {binary}")
-    print("  TODO: implementar decodificação Fibonacci/Zeckendorf")
-    print("  1. Separar os códigos usando o terminador '11'")
-    print("  2. Para cada código, somar os números de Fibonacci correspondentes")
-    print("     às posições onde o bit é 1")
-    print("  3. Repetir até consumir toda a string binária")
+    valid_numbers = _validate_numbers(numbers)
+    result = []
+    
+    for n in valid_numbers:
+        fibs = [1, 2]
+        while True:
+            next_fib = fibs[-1] + fibs[-2]
+            if next_fib > n:
+                break
+            fibs.append(next_fib)
+            
+        codeword = ['0'] * len(fibs)
+        temp = n
+        
+        for i in range(len(fibs) - 1, -1, -1):
+            if fibs[i] <= temp:
+                codeword[i] = '1'
+                temp -= fibs[i]
+                
+        codeword.append('1')
+        result.append("".join(codeword))
+        
+    encoded_string = "".join(result)
+    
+    print(f"Números originais : {valid_numbers}")
+    print(f"Binário gerado    : {encoded_string}")
+    
+    return encoded_string

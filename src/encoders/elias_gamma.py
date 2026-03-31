@@ -1,44 +1,49 @@
 """
 Elias-Gamma encoding implementation.
-TODO: implement encoding and decoding logic.
+
+Recebe uma lista de inteiros positivos e converte para código Elias-Gamma.
 """
 
-from typing import Union, List
+from typing import List, Union
+from src.decoders.elias_gamma_decoder import decode
 
+def _validate_numbers(numbers: Union[str, List[int]]) -> List[int]:
+    if isinstance(numbers, str):
+        try:
+            numbers = [int(x.strip()) for x in numbers.split() if x.strip()]
+        except ValueError:
+            raise TypeError("A entrada deve conter apenas números inteiros separados por espaço.")
+            
+    if not isinstance(numbers, list) or not numbers:
+        raise ValueError("A entrada não pode estar vazia.")
+        
+    for n in numbers:
+        if not isinstance(n, int) or n <= 0:
+            raise ValueError(f"Valor inválido: '{n}'. Elias-Gamma exige inteiros maiores que zero.")
+            
+    return numbers
 
-def encode(numbers: Union[int, List[int]]) -> str:
+def encode(numbers: Union[str, List[int]]) -> str:
     """
-    Encode integer(s) using Elias-Gamma coding.
+    Encode numbers using Elias-Gamma algorithm.
 
     Args:
-        numbers: Single positive integer or list of positive integers
+        numbers: String formatada com espaços ou Lista de inteiros a serem codificados.
 
     Returns:
-        Binary string representation
+        Encoded binary string.
     """
-    print("[Elias-Gamma] encode() chamado")
-    print(f"  entrada: {numbers}")
-    print("  TODO: implementar codificação Elias-Gamma")
-    print("  1. Para cada número n, obter sua representação binária")
-    print("  2. Calcular k = floor(log2(n)) (número de bits - 1)")
-    print("  3. Prefixar com k zeros seguidos de um 1 (ou k uns seguidos de um 0)")
-    print("  4. Concatenar prefixo unário + representação binária completa de n")
-
-
-def decode(binary: str) -> List[int]:
-    """
-    Decode Elias-Gamma encoded binary string.
-
-    Args:
-        binary: Binary string to decode
-
-    Returns:
-        List of decoded positive integers
-    """
-    print("[Elias-Gamma] decode() chamado")
-    print(f"  entrada binária: {binary}")
-    print("  TODO: implementar decodificação Elias-Gamma")
-    print("  1. Contar os uns iniciais para obter k (comprimento - 1)")
-    print("  2. Pular o zero separador")
-    print("  3. Ler os próximos k+1 bits como número binário")
-    print("  4. Repetir até consumir toda a string binária")
+    valid_numbers = _validate_numbers(numbers)
+    result = []
+    
+    for n in valid_numbers:
+        binary_n = bin(n)[2:] 
+        unary_zeros = '0' * (len(binary_n) - 1)
+        result.append(unary_zeros + binary_n)
+        
+    encoded_string = "".join(result)
+    
+    print(f"Números originais : {valid_numbers}")
+    print(f"Binário gerado    : {encoded_string}")
+    
+    return encoded_string

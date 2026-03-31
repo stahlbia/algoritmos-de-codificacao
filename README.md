@@ -225,8 +225,14 @@ algoritmos-de-codificacao/
 │   │   ├── elias_gamma.py        # Implementação Elias-Gamma
 │   │   ├── fibonacci.py          # Implementação Fibonacci
 │   │   └── huffman.py            # Implementação Huffman
+│   ├── decoders/
+│   │   ├── elias_gamma_decoder.py      # Classe base abstrata
+│   │   ├── fibonacci_decoder.py             # Implementação Golomb
+│   │   ├── golomb_decoder.py        # Implementação Elias-Gamma
+│   │   └── huffman_decoder.py            # Implementação Huffman
 │   ├── interface/
 │   │   ├── __init__.py
+│   │   ├── gui.py 
 │   │   └── cli.py                # Interface CLI
 │   └── utils/
 │       ├── __init__.py
@@ -238,11 +244,9 @@ algoritmos-de-codificacao/
 │   ├── test_elias_gamma.py
 │   ├── test_fibonacci.py
 │   └── test_huffman.py
-├── examples/
-│   ├── encode_example.py         # Exemplos de codificação
-│   └── decode_example.py         # Exemplos de decodificação
 ├── requirements.txt
 ├── setup.py
+├── run_gui.py
 ├── .gitignore
 └── README.md
 ```
@@ -262,16 +266,6 @@ pytest --cov=src
 pytest tests/test_huffman.py
 ```
 
-## 📖 Exemplos
-
-Execute os scripts de exemplo:
-
-```bash
-# Exemplos de codificação
-python examples/encode_example.py
-
-# Exemplos de decodificação
-python examples/decode_example.py
 ```
 
 ## 🛠️ Desenvolvimento
@@ -320,14 +314,11 @@ mypy src/
 Contribuições são bem-vindas! Por favor:
 
 1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
+2. Crie uma branch para sua feature (`git checkout -b feature/NovaFeature`)
+3. Commit suas mudanças (`git commit -m 'Adicionando uma NovaFeature'`)
+4. Push para a branch (`git push origin feature/NovaFeature`)
 5. Abra um Pull Request
 
-## 📝 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
 ## 📧 Contato
 
