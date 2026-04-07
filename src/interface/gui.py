@@ -7,7 +7,7 @@ Layout:
                    row 1 → encode/decode radio buttons
                    row 2 → "Entrada" label
                    row 3 → input textbox  (expands)
-                   row 4 → submit button
+                   row 4 → submit button (col 0) + error injection (col 1)
                    row 5 → "Resultado" label
                    row 6 → output textbox (expands)
                    row 7 → error label
@@ -111,12 +111,12 @@ class EncoderApp(customtkinter.CTk):
         center = customtkinter.CTkFrame(self, fg_color="transparent")
         center.grid(row=0, column=1, sticky="nsew", padx=30, pady=28)
 
-        # col 0 expands; col 1 is fixed (Golomb m widget)
+        # col 0 expands; col 1 is fixed (Golomb m / error injection widgets)
         center.grid_columnconfigure(0, weight=1)
         center.grid_columnconfigure(1, weight=0)
         # input and output rows expand vertically
         center.grid_rowconfigure(3, weight=2)
-        center.grid_rowconfigure(7, weight=3)
+        center.grid_rowconfigure(6, weight=3)
 
         # ── row 0: title (col 0) + Golomb m (col 1) ──────────────────
         self._title_label = customtkinter.CTkLabel(
@@ -125,14 +125,14 @@ class EncoderApp(customtkinter.CTk):
         self._title_label.grid(row=0, column=0, sticky="w", pady=(0, 12))
 
         self._golomb_frame = customtkinter.CTkFrame(center, fg_color="transparent")
-        self._golomb_frame.grid(row=0, column=1, sticky="w", padx=(20, 0), pady=(0, 12))
+        self._golomb_frame.grid(row=0, column=1, sticky="ew", padx=(20, 0), pady=(0, 12))
         customtkinter.CTkLabel(
-            self._golomb_frame, text="m :", anchor="w"
+            self._golomb_frame, text="m :", anchor="e", width=118
         ).pack(side="left", padx=(0, 6))
         customtkinter.CTkEntry(
             self._golomb_frame,
             textvariable=self.golomb_m,
-            width=64,
+            width=150,
             placeholder_text="4",
         ).pack(side="left")
         self._golomb_frame.grid_remove()   # hidden until Golomb is selected
@@ -170,46 +170,43 @@ class EncoderApp(customtkinter.CTk):
         )
         self._input_box.grid(row=3, column=0, columnspan=2, sticky="nsew", pady=(4, 0))
 
-        # ── row 4: submit button ───────────────────────────────────────
+        # ── row 4: submit button (col 0) + error injection (col 1) ────
         customtkinter.CTkButton(
             center,
             text="▶   Executar",
             font=customtkinter.CTkFont(size=13, weight="bold"),
             command=self._submit,
-        ).grid(row=4, column=0, columnspan=2, pady=14, sticky="w")
+        ).grid(row=4, column=0, pady=14, sticky="w")
 
-        # ── row 5: error injection ─────────────────────────────────────
         self._error_injection_frame = customtkinter.CTkFrame(center, fg_color="transparent")
-        self._error_injection_frame.grid(row=5, column=0, columnspan=2, sticky="w", pady=(0, 6))
+        self._error_injection_frame.grid(row=4, column=1, sticky="ew", padx=(20, 0), pady=14)
 
         customtkinter.CTkLabel(
-            self._error_injection_frame, text="Inserir Erro em Bits (Índices sep. por vírgula):", anchor="w"
-        ).pack(side="left", padx=(0, 8))
+            self._error_injection_frame, text="Force Error:", anchor="e", width=118
+        ).pack(side="left", padx=(0, 6))
 
-        self.error_indices = tk.StringVar(value="")
         self._error_entry = customtkinter.CTkEntry(
             self._error_injection_frame,
-            textvariable=self.error_indices,
             width=150,
-            placeholder_text="Ex: 0, 3, 5"
+            placeholder_text="Ex: 0, 3, 5",
         )
         self._error_entry.pack(side="left")
 
-        # ── row 6: output label ────────────────────────────────────────
+        # ── row 5: output label ────────────────────────────────────────
         customtkinter.CTkLabel(center, text="Resultado", anchor="w").grid(
-            row=6, column=0, columnspan=2, sticky="w"
+            row=5, column=0, columnspan=2, sticky="w"
         )
 
-        # ── row 7: output textbox (read-only) ─────────────────────────
+        # ── row 6: output textbox (read-only) ─────────────────────────
         self._output_box = customtkinter.CTkTextbox(
             center,
             font=customtkinter.CTkFont(family="Courier", size=14),
             border_spacing=14,
             state="disabled",
         )
-        self._output_box.grid(row=7, column=0, columnspan=2, sticky="nsew", pady=(4, 0))
+        self._output_box.grid(row=6, column=0, columnspan=2, sticky="nsew", pady=(4, 0))
 
-        # ── row 8: error label ─────────────────────────────────────────
+        # ── row 7: error label ─────────────────────────────────────────
         self._error_label = customtkinter.CTkLabel(
             center,
             text="",
@@ -217,7 +214,7 @@ class EncoderApp(customtkinter.CTk):
             anchor="w",
             wraplength=580,
         )
-        self._error_label.grid(row=8, column=0, columnspan=2, sticky="w", pady=(6, 0))
+        self._error_label.grid(row=7, column=0, columnspan=2, sticky="w", pady=(6, 0))
 
     # ─────────────────────────── helpers ─────────────────────────────
 
@@ -248,7 +245,7 @@ class EncoderApp(customtkinter.CTk):
         self._clear_error()
 
     def _on_operation_change(self):
-        """Clear input and output whenever the user switches encode ↔ decode."""
+        """Clear input whenever the user switches encode ↔ decode."""
         self._input_box.delete("1.0", "end")
         self._clear_error()
         if self.operation.get() == "encode":
@@ -295,9 +292,11 @@ class EncoderApp(customtkinter.CTk):
 
         output_str = buf.getvalue().strip()
         
-        if op == "encode" and self.error_indices.get().strip():
+        error_raw = self._error_entry.get().strip()
+        placeholder = "Ex: 0, 3, 5"
+        if op == "encode" and error_raw and error_raw != placeholder:
             try:
-                indices = [int(x.strip()) for x in self.error_indices.get().split(",")]
+                indices = [int(x.strip()) for x in error_raw.split(",")]
                 output_str = self._inject_errors(output_str, indices)
             except ValueError:
                 self._show_error("⚠ Índices de erro inválidos. Use números inteiros separados por vírgula.")
