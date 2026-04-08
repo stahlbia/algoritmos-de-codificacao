@@ -5,7 +5,16 @@ Recebe uma string binária e uma tabela de códigos {char: código}.
 Inverte a tabela e decodifica bit a bit.
 """
 
+from dataclasses import dataclass
 from typing import Dict
+
+
+@dataclass
+class HuffmanDecodeResult:
+    binary: str
+    codes: Dict[str, str]
+    text: str
+    total_bits: int
 
 
 def _validate_binary(binary: str) -> str:
@@ -38,7 +47,7 @@ def _validate_codes(codes: Dict[str, str]) -> Dict[str, str]:
     return codes
 
 
-def decode(binary: str, codes: Dict[str, str]) -> str:
+def decode(binary: str, codes: Dict[str, str]) -> HuffmanDecodeResult:
     """
     Decode Huffman encoded binary string.
 
@@ -47,7 +56,7 @@ def decode(binary: str, codes: Dict[str, str]) -> str:
         codes: Code table mapping characters to their binary codes
 
     Returns:
-        Decoded text string
+        HuffmanDecodeResult dataclass with decoded text and metadata.
     """
     binary = _validate_binary(binary)
     codes = _validate_codes(codes)
@@ -69,10 +78,21 @@ def decode(binary: str, codes: Dict[str, str]) -> str:
             f"Sequência binária inválida: sobrou '{buffer}' sem correspondência."
         )
 
-    result = "".join(decoded_chars)
+    text = "".join(decoded_chars)
 
-    print(f"Binário        : {binary}")
-    print(f"Tabela usada   : {codes}")
-    print(f"Texto decoded  : {result}")
+    return HuffmanDecodeResult(
+        binary=binary,
+        codes=codes,
+        text=text,
+        total_bits=len(binary),
+    )
 
-    return result
+
+def format_result(result: HuffmanDecodeResult) -> str:
+    """Format a HuffmanDecodeResult into a human-readable string."""
+    return (
+        f"Binário recebido : {result.binary}\n"
+        f"Tabela de códigos: {result.codes}\n"
+        f"Texto decodificado: {result.text}\n"
+        f"Bits processados : {result.total_bits}"
+    )

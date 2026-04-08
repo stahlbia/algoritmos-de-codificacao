@@ -318,15 +318,19 @@ class EncoderApp(customtkinter.CTk):
 
     def _run_encode(self, algo: str, raw: str):
         if algo == "Huffman":
-            huffman.encode(raw)
+            result = huffman.encode(raw)
+            print(huffman.format_result(result))
         else:
             numbers = self._parse_numbers(raw, allow_zero=False)
             if algo == "Golomb":
-                print(golomb.encode(numbers, m=self._get_m()))
+                result = golomb.encode(numbers, m=self._get_m())
+                print(golomb.format_result(result))
             elif algo == "Elias-Gamma":
-                elias_gamma.encode(numbers)
+                result = elias_gamma.encode(numbers)
+                print(elias_gamma.format_result(result))
             elif algo == "Fibonacci/Zeckendorf":
-                fibonacci.encode(numbers)
+                result = fibonacci.encode(numbers)
+                print(fibonacci.format_result(result))
 
     def _run_decode(self, algo: str, raw: str):
         if algo == "Huffman":

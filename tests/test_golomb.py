@@ -11,8 +11,8 @@ Cobre:
 """
 
 import pytest
-from src.encoders.golomb import encode
-from src.decoders.golomb_decoder import decode
+from src.encoders.golomb import encode, GolombResult
+from src.decoders.golomb_decoder import decode, GolombDecodeResult
 
 
 # ── helpers ───────────────────────────────────────────────────────────
@@ -34,23 +34,31 @@ def flip_bit(binary: str, index: int) -> str:
 
 class TestEncodeSingle:
     def test_encode_1_m4(self):
-        # n=1 → valor_interno=0 → q=0, r=0 → unário="0", resto="00" → "000"
-        assert encode(1, m=4) == "000"
+        assert encode(1, m=4).encoded == "000"
 
-    def test_encode_single_int(self):
+    def test_returns_golomb_result(self):
         result = encode(5, m=4)
-        assert isinstance(result, str)
-        assert all(c in "01 " for c in result)
+        assert isinstance(result, GolombResult)
+
+    def test_encoded_is_binary_string(self):
+        result = encode(5, m=4)
+        assert isinstance(result.encoded, str)
+        assert all(c in "01 " for c in result.encoded)
 
     def test_encode_m1(self):
-        # m=1 → unário puro. n=1 → valor=0 → "0"; n=3 → valor=2 → "110"
-        assert encode(1, m=1) == "0"
-        assert encode(3, m=1) == "110"
+        assert encode(1, m=1).encoded == "0"
+        assert encode(3, m=1).encoded == "110"
 
     def test_encode_m2(self):
-        # m=2 → k=1, c=0. n=1 → val=0 → q=0,r=0 → "00"; n=2 → val=1 → q=0,r=1 → "01"
-        assert encode(1, m=2) == "00"
-        assert encode(2, m=2) == "01"
+        assert encode(1, m=2).encoded == "00"
+        assert encode(2, m=2).encoded == "01"
+
+    def test_result_fields(self):
+        result = encode(5, m=4)
+        assert result.m == 4
+        assert result.numbers == [5]
+        assert result.total_bits == len(result.encoded)
+        assert result.rate > 0
 
 
 # ── Encode: listas ────────────────────────────────────────────────────
@@ -58,33 +66,42 @@ class TestEncodeSingle:
 class TestEncodeList:
     def test_encode_list(self):
         result = encode([1, 2, 3], m=4)
-        parts = result.split()
+        parts = result.encoded.split()
         assert len(parts) == 3
 
     def test_encode_list_m1(self):
         result = encode([1, 2, 3], m=1)
-        parts = result.split()
+        parts = result.encoded.split()
         assert parts == ["0", "10", "110"]
 
 
 # ── Decode ────────────────────────────────────────────────────────────
 
 class TestDecode:
+    def test_returns_golomb_decode_result(self):
+        result = decode("000", m=4)
+        assert isinstance(result, GolombDecodeResult)
+
     def test_decode_single(self):
-        assert decode("000", m=4) == [1]
+        assert decode("000", m=4).numbers == [1]
 
     def test_decode_m1(self):
-        assert decode("0", m=1) == [1]
-        assert decode("110", m=1) == [3]
+        assert decode("0", m=1).numbers == [1]
+        assert decode("110", m=1).numbers == [3]
 
     def test_decode_m2(self):
-        assert decode("00", m=2) == [1]
-        assert decode("01", m=2) == [2]
+        assert decode("00", m=2).numbers == [1]
+        assert decode("01", m=2).numbers == [2]
+
+    def test_decode_result_fields(self):
+        result = decode("000", m=4)
+        assert result.m == 4
+        assert result.total_bits == 3
+        assert result.binary == "000"
 
     def test_decode_multiple_concatenated(self):
-        # Codifica [1,2,3] com m=4, remove espaços, decodifica
-        encoded = encode([1, 2, 3], m=4).replace(" ", "")
-        assert decode(encoded, m=4) == [1, 2, 3]
+        encoded = encode([1, 2, 3], m=4).encoded.replace(" ", "")
+        assert decode(encoded, m=4).numbers == [1, 2, 3]
 
 
 # ── Roundtrip SEM erro ────────────────────────────────────────────────
@@ -93,23 +110,21 @@ class TestRoundtripNoError:
     @pytest.mark.parametrize("m", [1, 2, 3, 4, 5, 7, 8, 16])
     def test_roundtrip_single(self, m):
         for n in [1, 2, 3, 5, 10, 20]:
-            encoded = encode(n, m=m).replace(" ", "")
-            decoded = decode(encoded, m=m)
+            encoded = encode(n, m=m).encoded.replace(" ", "")
+            decoded = decode(encoded, m=m).numbers
             assert decoded == [n], f"Falha: n={n}, m={m}"
 
     @pytest.mark.parametrize("m", [1, 2, 4, 8])
     def test_roundtrip_list(self, m):
         numbers = [1, 3, 5, 7, 10, 15]
-        encoded = encode(numbers, m=m).replace(" ", "")
-        decoded = decode(encoded, m=m)
-        assert decoded == numbers
+        encoded = encode(numbers, m=m).encoded.replace(" ", "")
+        assert decode(encoded, m=m).numbers == numbers
 
     def test_roundtrip_large_values(self):
         numbers = [50, 100, 200]
         for m in [4, 7, 16]:
-            encoded = encode(numbers, m=m).replace(" ", "")
-            decoded = decode(encoded, m=m)
-            assert decoded == numbers
+            encoded = encode(numbers, m=m).encoded.replace(" ", "")
+            assert decode(encoded, m=m).numbers == numbers
 
 
 # ── Roundtrip COM inserção de erro em bits ─────────────────────────────
@@ -117,48 +132,35 @@ class TestRoundtripNoError:
 class TestRoundtripWithError:
     def test_single_bit_flip(self):
         numbers = [1, 3, 5, 7]
-        encoded = encode(numbers, m=4).replace(" ", "")
-
+        encoded = encode(numbers, m=4).encoded.replace(" ", "")
         corrupted = flip_bit(encoded, 0)
         assert corrupted != encoded
-
         try:
-            decoded = decode(corrupted, m=4)
-            assert decoded != numbers, (
-                "Esperava-se resultado diferente após flip de bit."
-            )
+            assert decode(corrupted, m=4).numbers != numbers
         except ValueError:
-            pass  
+            pass
 
     def test_multiple_bit_flips(self):
         numbers = [2, 4, 6, 8]
-        encoded = encode(numbers, m=4).replace(" ", "")
-
+        encoded = encode(numbers, m=4).encoded.replace(" ", "")
         corrupted = encoded
         for idx in [0, 2, 4]:
             if idx < len(corrupted.replace(" ", "")):
                 corrupted = flip_bit(corrupted, idx)
-
         try:
-            decoded = decode(corrupted, m=4)
-            assert decoded != numbers
+            assert decode(corrupted, m=4).numbers != numbers
         except ValueError:
             pass
 
     def test_manual_error_indices(self):
         numbers = [3, 7, 12]
-        encoded = encode(numbers, m=8).replace(" ", "")
-
-        error_indices = [1, 5]
+        encoded = encode(numbers, m=8).encoded.replace(" ", "")
         corrupted = encoded
-        for idx in error_indices:
+        for idx in [1, 5]:
             corrupted = flip_bit(corrupted, idx)
-
         assert corrupted != encoded
-
         try:
-            decoded = decode(corrupted, m=8)
-            assert decoded != numbers
+            assert decode(corrupted, m=8).numbers != numbers
         except ValueError:
             pass
 
@@ -169,9 +171,8 @@ class TestNonPowerOfTwo:
     @pytest.mark.parametrize("m", [3, 5, 6, 7, 9, 10])
     def test_roundtrip_non_power_of_two(self, m):
         numbers = [1, 2, 4, 8, 12]
-        encoded = encode(numbers, m=m).replace(" ", "")
-        decoded = decode(encoded, m=m)
-        assert decoded == numbers
+        encoded = encode(numbers, m=m).encoded.replace(" ", "")
+        assert decode(encoded, m=m).numbers == numbers
 
 
 # ── Validações de entrada ──────────────────────────────────────────────
@@ -219,4 +220,4 @@ class TestValidation:
 
     def test_decode_incomplete_raises(self):
         with pytest.raises(ValueError):
-            decode("1", m=4)  
+            decode("1", m=4)

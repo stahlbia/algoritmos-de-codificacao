@@ -16,8 +16,9 @@ from src.encoders.huffman import (
     build_code_table,
     encode,
     HuffmanNode,
+    HuffmanResult,
 )
-from src.decoders.huffman_decoder import decode
+from src.decoders.huffman_decoder import decode, HuffmanDecodeResult
 
 
 # ── helpers ───────────────────────────────────────────────────────────
@@ -96,28 +97,46 @@ class TestCodeTable:
 # ── Encode ────────────────────────────────────────────────────────────
 
 class TestEncode:
-    def test_returns_tuple(self):
+    def test_returns_huffman_result(self):
         result = encode("abc")
-        assert isinstance(result, tuple)
-        assert len(result) == 2
+        assert isinstance(result, HuffmanResult)
 
     def test_encoded_is_binary_string(self):
-        encoded, _ = encode("hello world")
-        assert all(bit in "01" for bit in encoded)
+        result = encode("hello world")
+        assert all(bit in "01" for bit in result.encoded)
 
     def test_length_matches(self):
         text = "abracadabra"
-        encoded, codes = encode(text)
-        expected_len = sum(len(codes[ch]) for ch in text)
-        assert len(encoded) == expected_len
+        result = encode(text)
+        expected_len = sum(len(result.code_table[ch]) for ch in text)
+        assert len(result.encoded) == expected_len
+
+    def test_rate_is_positive(self):
+        result = encode("abracadabra")
+        assert result.rate > 0
+
+    def test_total_bits_matches_encoded(self):
+        result = encode("abracadabra")
+        assert result.total_bits == len(result.encoded)
 
 
 # ── Decode ────────────────────────────────────────────────────────────
 
 class TestDecode:
+    def test_returns_huffman_decode_result(self):
+        codes = {"a": "0", "b": "10", "c": "11"}
+        assert isinstance(decode("01011", codes), HuffmanDecodeResult)
+
     def test_simple_decode(self):
         codes = {"a": "0", "b": "10", "c": "11"}
-        assert decode("01011", codes) == "abc"
+        assert decode("01011", codes).text == "abc"
+
+    def test_decode_result_fields(self):
+        codes = {"a": "0", "b": "10", "c": "11"}
+        result = decode("01011", codes)
+        assert result.binary == "01011"
+        assert result.total_bits == 5
+        assert result.codes == codes
 
     def test_invalid_trailing_bits(self):
         codes = {"a": "0", "b": "10"}
@@ -146,9 +165,9 @@ class TestRoundtripNoError:
         "a",
     ])
     def test_roundtrip(self, text):
-        encoded, codes = encode(text)
-        decoded = decode(encoded, codes)
-        assert decoded == text
+        result = encode(text)
+        decoded = decode(result.encoded, result.code_table)
+        assert decoded.text == text
 
 
 # ── Roundtrip COM inserção de erro em bits ─────────────────────────────
@@ -156,53 +175,52 @@ class TestRoundtripNoError:
 class TestRoundtripWithError:
     def test_single_bit_flip_detected(self):
         text = "abracadabra"
-        encoded, codes = encode(text)
+        result = encode(text)
 
-        corrupted = flip_bit(encoded, 0)
-        assert corrupted != encoded
+        corrupted = flip_bit(result.encoded, 0)
+        assert corrupted != result.encoded
 
         # A decodificação pode:
         #   (a) retornar texto diferente do original, ou
         #   (b) lançar ValueError se a sequência corrompida for inválida.
         try:
-            decoded = decode(corrupted, codes)
-            assert decoded != text, (
+            decoded = decode(corrupted, result.code_table)
+            assert decoded.text != text, (
                 "Esperava-se que o texto decodificado fosse diferente após flip de bit.")
         except ValueError:
-            pass  
+            pass
 
     def test_multiple_bit_flips(self):
         text = "hello world"
-        encoded, codes = encode(text)
+        result = encode(text)
 
-        corrupted = encoded
+        corrupted = result.encoded
         for idx in [0, 2, 4]:
             if idx < len(corrupted):
                 corrupted = flip_bit(corrupted, idx)
 
         try:
-            decoded = decode(corrupted, codes)
-            assert decoded != text
+            decoded = decode(corrupted, result.code_table)
+            assert decoded.text != text
         except ValueError:
             pass
 
     def test_manual_error_indices(self):
         """Simula o mecanismo de inserção manual de erro por índices."""
         text = "teste de erro"
-        encoded, codes = encode(text)
+        result = encode(text)
 
         error_indices = [1, 3]
-
-        corrupted = encoded
+        corrupted = result.encoded
         for idx in error_indices:
             if idx < len(corrupted):
                 corrupted = flip_bit(corrupted, idx)
 
-        assert corrupted != encoded
+        assert corrupted != result.encoded
 
         try:
-            decoded = decode(corrupted, codes)
-            assert decoded != text
+            decoded = decode(corrupted, result.code_table)
+            assert decoded.text != text
         except ValueError:
             pass
 
