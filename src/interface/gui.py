@@ -18,9 +18,8 @@ import tkinter as tk
 from io import StringIO
 
 import customtkinter
-from src.encoders import golomb, elias_gamma, fibonacci, huffman
-from src.decoders import golomb_decoder
-from src.decoders import huffman_decoder 
+from src.encoders import golomb as golomb_encoder, elias_gamma as elias_gamma_encoder, fibonacci as fibonacci_encoder, huffman as huffman_encoder
+from src.decoders import golomb_decoder, elias_gamma_decoder, fibonacci_decoder, huffman_decoder
 
 # ── default appearance ────────────────────────────────────────────────
 customtkinter.set_appearance_mode("Dark")
@@ -40,9 +39,11 @@ class EncoderApp(customtkinter.CTk):
         self.minsize(820, 520)
 
         # ── state variables ──────────────────────────────────────────
-        self.selected_algo = tk.StringVar(value=self.ALGORITHMS[0])
-        self.operation     = tk.StringVar(value="encode")
-        self.golomb_m      = tk.StringVar(value="4")
+        self.selected_algo       = tk.StringVar(value=self.ALGORITHMS[0])
+        self.operation           = tk.StringVar(value="encode")
+        self.golomb_m            = tk.StringVar(value="4")
+        self._placeholder_active = False
+        self._HUFFMAN_PLACEHOLDER = "101001 a:1 b:01 c:00"
 
         # grid: sidebar (col 0) | center (col 1, expands)
         self.grid_columnconfigure(1, weight=1)
@@ -170,13 +171,21 @@ class EncoderApp(customtkinter.CTk):
         )
         self._input_box.grid(row=3, column=0, columnspan=2, sticky="nsew", pady=(4, 0))
 
+        # Bind focus events for placeholder simulation
+        self._input_box._textbox.bind("<FocusIn>",  self._on_input_focus_in)
+        self._input_box._textbox.bind("<FocusOut>", self._on_input_focus_out)
+
         # ── row 4: submit button (col 0) + error injection (col 1) ────
+
+        # ── submit button ─────────────────────────────────────────
         customtkinter.CTkButton(
             center,
             text="▶   Executar",
             font=customtkinter.CTkFont(size=13, weight="bold"),
             command=self._submit,
         ).grid(row=4, column=0, pady=14, sticky="w")
+
+        # ── error injection ─────────────────────────────────────────
 
         self._error_injection_frame = customtkinter.CTkFrame(center, fg_color="transparent")
         self._error_injection_frame.grid(row=4, column=1, sticky="ew", padx=(20, 0), pady=14)
@@ -243,18 +252,65 @@ class EncoderApp(customtkinter.CTk):
 
         self._clear_output()
         self._clear_error()
+        self._remove_placeholder()
+        self._input_box.delete("1.0", "end")
+        self._update_placeholder()
 
     def _on_operation_change(self):
         """Clear input whenever the user switches encode ↔ decode."""
+        self._remove_placeholder()
         self._input_box.delete("1.0", "end")
         self._clear_error()
         if self.operation.get() == "encode":
             self._error_injection_frame.grid()
         else:
             self._error_injection_frame.grid_remove()
+        self._update_placeholder()
 
     def _change_scaling(self, value: str):
         customtkinter.set_widget_scaling(int(value.replace("%", "")) / 100)
+
+    # ─────────────── placeholder helpers ─────────────────────────────
+
+    def _needs_placeholder(self) -> bool:
+        return (
+            self.selected_algo.get() == "Huffman"
+            and self.operation.get() == "decode"
+        )
+
+    def _update_placeholder(self):
+        """Show placeholder if the input box is empty and conditions are met."""
+        if self._needs_placeholder():
+            content = self._input_box.get("1.0", "end").strip()
+            if not content:
+                self._show_placeholder()
+
+    def _show_placeholder(self):
+        self._input_box.delete("1.0", "end")
+        self._input_box.insert("1.0", self._HUFFMAN_PLACEHOLDER)
+        self._input_box.configure(text_color="gray50")
+        self._placeholder_active = True
+
+    def _remove_placeholder(self):
+        if self._placeholder_active:
+            self._input_box.delete("1.0", "end")
+            self._input_box.configure(text_color=("gray10", "gray90"))
+            self._placeholder_active = False
+
+    def _on_input_focus_in(self, _event=None):
+        if self._placeholder_active:
+            self._remove_placeholder()
+
+    def _on_input_focus_out(self, _event=None):
+        content = self._input_box.get("1.0", "end").strip()
+        if not content and self._needs_placeholder():
+            self._show_placeholder()
+
+    def _get_raw_input(self) -> str:
+        """Return input text, treating active placeholder as empty."""
+        if self._placeholder_active:
+            return ""
+        return self._input_box.get("1.0", "end").strip()
 
     # ─────────────────────────── submit ──────────────────────────────
 
@@ -262,7 +318,7 @@ class EncoderApp(customtkinter.CTk):
         self._clear_error()
         self._clear_output()
 
-        raw = self._input_box.get("1.0", "end").strip()
+        raw = self._get_raw_input()
         if not raw:
             self._show_error("⚠  A entrada não pode estar vazia.")
             return
@@ -318,19 +374,19 @@ class EncoderApp(customtkinter.CTk):
 
     def _run_encode(self, algo: str, raw: str):
         if algo == "Huffman":
-            result = huffman.encode(raw)
-            print(huffman.format_result(result))
+            result = huffman_encoder.encode(raw)
+            print(huffman_encoder.format_result(result))
         else:
             numbers = self._parse_numbers(raw, allow_zero=False)
             if algo == "Golomb":
-                result = golomb.encode(numbers, m=self._get_m())
-                print(golomb.format_result(result))
+                result = golomb_encoder.encode(numbers, m=self._get_m())
+                print(golomb_encoder.format_result(result))
             elif algo == "Elias-Gamma":
-                result = elias_gamma.encode(numbers)
-                print(elias_gamma.format_result(result))
+                result = elias_gamma_encoder.encode(numbers)
+                print(elias_gamma_encoder.format_result(result))
             elif algo == "Fibonacci/Zeckendorf":
-                result = fibonacci.encode(numbers)
-                print(fibonacci.format_result(result))
+                result = fibonacci_encoder.encode(numbers)
+                print(fibonacci_encoder.format_result(result))
 
     def _run_decode(self, algo: str, raw: str):
         if algo == "Huffman":
@@ -345,22 +401,25 @@ class EncoderApp(customtkinter.CTk):
             if not codes:
                 raise ValueError(
                     "Para decodificar Huffman informe: <binário> <char:código ...>\n"
-                    "Exemplo:  10110 a:1 b:01 c:00"
+                    "Exemplo:  101001 a:1 b:01 c:00"
                 )
             if not all(c in "01" for c in binary):
                 raise ValueError("Código binário inválido — use apenas 0 e 1.")
-            huffman_decoder.decode(binary, codes) 
+            result = huffman_decoder.decode(binary, codes)
+            print(huffman_decoder.format_result(result))
         else:
             binary = raw.replace(" ", "")
             if not all(c in "01" for c in binary):
                 raise ValueError("Código binário inválido — use apenas 0 e 1.")
             if algo == "Golomb":
                 result = golomb_decoder.decode(binary, m=self._get_m())
-                print(" ".join(map(str, result)))
+                print(golomb_decoder.format_result(result))
             elif algo == "Elias-Gamma":
-                elias_gamma.decode(binary)
+                result = elias_gamma_decoder.decode(binary)
+                print(elias_gamma_decoder.format_result(result))
             elif algo == "Fibonacci/Zeckendorf":
-                fibonacci.decode(binary)
+                result = fibonacci_decoder.decode(binary)
+                print(fibonacci_decoder.format_result(result))
 
     # ─────────────────────────── utils ───────────────────────────────
 
