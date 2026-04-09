@@ -12,8 +12,19 @@ Convenção adotada neste projeto:
     r = valor_interno % m
 """
 
-from typing import Union, List
+from dataclasses import dataclass
+from typing import List, Union
 import math
+
+
+@dataclass
+class GolombResult:
+    numbers: List[int]
+    m: int
+    encoded_parts: List[str]
+    encoded: str
+    total_bits: int
+    rate: float
 
 
 def _validate_m(m: int) -> None:
@@ -41,7 +52,7 @@ def _normalize_numbers(numbers: Union[int, List[int]]) -> List[int]:
     return normalized
 
 
-def encode(numbers: Union[int, List[int]], m: int = 4) -> str:
+def encode(numbers: Union[int, List[int]], m: int = 4) -> GolombResult:
     """
     Encode positive integer(s) using Golomb coding.
 
@@ -50,26 +61,21 @@ def encode(numbers: Union[int, List[int]], m: int = 4) -> str:
         m: Golomb parameter (positive integer)
 
     Returns:
-        Binary string representation
+        GolombResult dataclass with all encoding information.
     """
     _validate_m(m)
     numbers = _normalize_numbers(numbers)
 
-    # Se m = 1, log2(1)=0 e o algoritmo vira unário puro.
     k = math.ceil(math.log2(m)) if m > 1 else 0
     c = (2 ** k) - m if m > 1 else 0
 
     encoded_parts = []
 
     for n in numbers:
-        # Como o enunciado pede inteiros positivos (>0),
-        # o Golomb é aplicado sobre (n - 1).
         value = n - 1
-
         q = value // m
         r = value % m
 
-        # Unário: q uns seguidos de um zero.
         unary = "1" * q + "0"
 
         if m == 1:
@@ -82,4 +88,26 @@ def encode(numbers: Union[int, List[int]], m: int = 4) -> str:
 
         encoded_parts.append(unary + binary)
 
-    return " ".join(encoded_parts)
+    encoded = " ".join(encoded_parts)
+    total_bits = sum(len(p) for p in encoded_parts)
+    rate = total_bits / len(numbers)
+
+    return GolombResult(
+        numbers=numbers,
+        m=m,
+        encoded_parts=encoded_parts,
+        encoded=encoded,
+        total_bits=total_bits,
+        rate=rate,
+    )
+
+
+def format_result(result: GolombResult) -> str:
+    """Format a GolombResult into a human-readable string."""
+    return (
+        f"Números originais : {result.numbers}\n"
+        f"Parâmetro m       : {result.m}\n"
+        f"Binário gerado    : {result.encoded}\n"
+        f"Bits totais       : {result.total_bits}\n"
+        f"Taxa              : {result.rate:.2f} bits/símbolo"
+    )

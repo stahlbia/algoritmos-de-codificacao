@@ -10,6 +10,7 @@ Fluxo:
 
 import heapq
 from collections import Counter
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 
@@ -26,6 +27,16 @@ class HuffmanNode:
 
     def __lt__(self, other: "HuffmanNode") -> bool:
         return self.freq < other.freq
+
+
+@dataclass
+class HuffmanResult:
+    text: str
+    freq_table: Dict[str, int]
+    code_table: Dict[str, str]
+    encoded: str
+    total_bits: int
+    rate: float
 
 
 def _validate_text(text: str) -> str:
@@ -93,7 +104,7 @@ def build_code_table(root: HuffmanNode) -> Dict[str, str]:
     return codes
 
 
-def encode(text: str) -> Tuple[str, Dict[str, str]]:
+def encode(text: str) -> HuffmanResult:
     """
     Encode text using Huffman coding.
 
@@ -101,7 +112,7 @@ def encode(text: str) -> Tuple[str, Dict[str, str]]:
         text: Text string to encode
 
     Returns:
-        Tuple of (encoded binary string, code table dictionary)
+        HuffmanResult dataclass with all encoding information.
     """
     text = _validate_text(text)
 
@@ -110,12 +121,26 @@ def encode(text: str) -> Tuple[str, Dict[str, str]]:
     code_table = build_code_table(tree)
 
     encoded = "".join(code_table[ch] for ch in text)
+    total_bits = len(encoded)
+    rate = total_bits / len(text)
 
-    print(f"Texto original : {text}")
-    print(f"Frequências    : {freq_table}")
-    print(f"Tabela de codes: {code_table}")
-    print(f"Binário        : {encoded}")
-    print(f"Bits totais    : {len(encoded)}")
-    print(f"Taxa           : {len(encoded) / len(text):.2f} bits/símbolo")
+    return HuffmanResult(
+        text=text,
+        freq_table=freq_table,
+        code_table=code_table,
+        encoded=encoded,
+        total_bits=total_bits,
+        rate=rate,
+    )
 
-    return encoded, code_table
+
+def format_result(result: HuffmanResult) -> str:
+    """Format a HuffmanResult into a human-readable string."""
+    return (
+        f"Texto original : {result.text}\n"
+        f"Frequências    : {result.freq_table}\n"
+        f"Tabela de codes: {result.code_table}\n"
+        f"Binário        : {result.encoded}\n"
+        f"Bits totais    : {result.total_bits}\n"
+        f"Taxa           : {result.rate:.2f} bits/símbolo"
+    )

@@ -5,7 +5,11 @@ Command-line interface for encoding algorithms.
 import sys
 from typing import Optional
 from src.encoders import golomb, elias_gamma, fibonacci, huffman
-from src.decoders import huffman_decoder
+from src.decoders import golomb_decoder, elias_gamma_decoder, fibonacci_decoder, huffman_decoder
+from src.decoders.golomb_decoder import format_result as golomb_decode_fmt
+from src.decoders.elias_gamma_decoder import format_result as elias_decode_fmt
+from src.decoders.fibonacci_decoder import format_result as fib_decode_fmt
+from src.decoders.huffman_decoder import format_result as huffman_decode_fmt
 
 
 class EncoderCLI:
@@ -101,7 +105,9 @@ class EncoderCLI:
             text = self.get_input("\nInforme o texto a codificar: ")
             if not text:
                 return
-            huffman.encode(text)
+            result = huffman.encode(text)
+            print()
+            print(huffman.format_result(result))
 
         else:
             input_str = self.get_input(
@@ -117,11 +123,17 @@ class EncoderCLI:
                 return
 
             if self.current_algo == 'Golomb':
-                golomb.encode(numbers, m=self.golomb_m)
+                result = golomb.encode(numbers, m=self.golomb_m)
+                print()
+                print(golomb.format_result(result))
             elif self.current_algo == 'Elias-Gamma':
-                elias_gamma.encode(numbers)
+                result = elias_gamma.encode(numbers)
+                print()
+                print(elias_gamma.format_result(result))
             elif self.current_algo == 'Fibonacci/Zeckendorf':
-                fibonacci.encode(numbers)
+                result = fibonacci.encode(numbers)
+                print()
+                print(fibonacci.format_result(result))
 
     def decode_operation(self):
         """Handle decoding operation."""
@@ -152,14 +164,22 @@ class EncoderCLI:
                     char, code = pair.split(':', 1)
                     codes[char] = code
 
-            huffman_decoder.decode(binary, codes)
+            result = huffman_decoder.decode(binary, codes)
+            print()
+            print(huffman_decode_fmt(result))
 
         elif self.current_algo == 'Golomb':
-            golomb.decode(binary, m=self.golomb_m)
+            result = golomb_decoder.decode(binary, m=self.golomb_m)
+            print()
+            print(golomb_decode_fmt(result))
         elif self.current_algo == 'Elias-Gamma':
-            elias_gamma.decode(binary)
+            result = elias_gamma_decoder.decode(binary)
+            print()
+            print(elias_decode_fmt(result))
         elif self.current_algo == 'Fibonacci/Zeckendorf':
-            fibonacci.decode(binary)
+            result = fibonacci_decoder.decode(binary)
+            print()
+            print(fib_decode_fmt(result))
 
     def run_operations(self):
         """Run encoding/decoding operations loop."""

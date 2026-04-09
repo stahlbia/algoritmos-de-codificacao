@@ -10,7 +10,16 @@ Convenção adotada neste projeto:
 """
 
 import math
+from dataclasses import dataclass
 from typing import List
+
+
+@dataclass
+class GolombDecodeResult:
+    binary: str
+    m: int
+    numbers: List[int]
+    total_bits: int
 
 
 def _validate_m(m: int) -> None:
@@ -33,7 +42,7 @@ def _validate_binary(binary: str) -> str:
     return binary
 
 
-def decode(binary: str, m: int = 4) -> List[int]:
+def decode(binary: str, m: int = 4) -> GolombDecodeResult:
     """
     Decode Golomb encoded binary string.
 
@@ -42,7 +51,7 @@ def decode(binary: str, m: int = 4) -> List[int]:
         m: Golomb parameter (positive integer)
 
     Returns:
-        List of decoded positive integers
+        GolombDecodeResult dataclass with decoded numbers and metadata.
     """
     _validate_m(m)
     binary = _validate_binary(binary)
@@ -96,4 +105,19 @@ def decode(binary: str, m: int = 4) -> List[int]:
         n = value + 1
         decoded_numbers.append(n)
 
-    return decoded_numbers
+    return GolombDecodeResult(
+        binary=binary,
+        m=m,
+        numbers=decoded_numbers,
+        total_bits=len(binary),
+    )
+
+
+def format_result(result: GolombDecodeResult) -> str:
+    """Format a GolombDecodeResult into a human-readable string."""
+    return (
+        f"Binário recebido      : {result.binary}\n"
+        f"Parâmetro m           : {result.m}\n"
+        f"Números decodificados : {result.numbers}\n"
+        f"Bits processados      : {result.total_bits}"
+    )

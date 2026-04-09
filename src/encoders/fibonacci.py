@@ -4,8 +4,17 @@ Fibonacci (Zeckendorf) encoding implementation.
 Recebe uma lista de inteiros positivos e converte para código Fibonacci.
 """
 
+from dataclasses import dataclass
 from typing import List, Union
-from src.decoders.fibonacci_decoder import decode
+
+
+@dataclass
+class FibonacciResult:
+    numbers: List[int]
+    encoded: str
+    total_bits: int
+    rate: float
+
 
 def _validate_numbers(numbers: Union[str, List[int]]) -> List[int]:
     if isinstance(numbers, str):
@@ -13,17 +22,18 @@ def _validate_numbers(numbers: Union[str, List[int]]) -> List[int]:
             numbers = [int(x.strip()) for x in numbers.split() if x.strip()]
         except ValueError:
             raise TypeError("A entrada deve conter apenas números inteiros separados por espaço.")
-            
+
     if not isinstance(numbers, list) or not numbers:
         raise ValueError("A entrada não pode estar vazia.")
-        
+
     for n in numbers:
-        if not isinstance(n, int) or n <= 0:
+        if not isinstance(n, int) or isinstance(n, bool) or n <= 0:
             raise ValueError(f"Valor inválido: '{n}'. Fibonacci exige inteiros maiores que zero.")
-            
+
     return numbers
 
-def encode(numbers: Union[str, List[int]]) -> str:
+
+def encode(numbers: Union[str, List[int]]) -> FibonacciResult:
     """
     Encode numbers using Fibonacci/Zeckendorf algorithm.
 
@@ -31,33 +41,47 @@ def encode(numbers: Union[str, List[int]]) -> str:
         numbers: String formatada com espaços ou Lista de inteiros a serem codificados.
 
     Returns:
-        Encoded binary string ending with terminator '11'.
+        FibonacciResult dataclass with all encoding information.
     """
     valid_numbers = _validate_numbers(numbers)
-    result = []
-    
+    parts = []
+
     for n in valid_numbers:
-        fibs = [1, 2]
-        while True:
-            next_fib = fibs[-1] + fibs[-2]
-            if next_fib > n:
-                break
-            fibs.append(next_fib)
-            
-        codeword = ['0'] * len(fibs)
+        # Build Fibonacci sequence F(2)=1, F(3)=2, F(4)=3, F(5)=5, ... up to n
+        fibs = []
+        a, b = 1, 2
+        while a <= n:
+            fibs.append(a)
+            a, b = b, a + b
+
+        codeword = ["0"] * len(fibs)
         temp = n
-        
+
         for i in range(len(fibs) - 1, -1, -1):
             if fibs[i] <= temp:
-                codeword[i] = '1'
+                codeword[i] = "1"
                 temp -= fibs[i]
-                
-        codeword.append('1')
-        result.append("".join(codeword))
-        
-    encoded_string = "".join(result)
-    
-    print(f"Números originais : {valid_numbers}")
-    print(f"Binário gerado    : {encoded_string}")
-    
-    return encoded_string
+
+        codeword.append("1")
+        parts.append("".join(codeword))
+
+    encoded = "".join(parts)
+    total_bits = len(encoded)
+    rate = total_bits / len(valid_numbers)
+
+    return FibonacciResult(
+        numbers=valid_numbers,
+        encoded=encoded,
+        total_bits=total_bits,
+        rate=rate,
+    )
+
+
+def format_result(result: FibonacciResult) -> str:
+    """Format a FibonacciResult into a human-readable string."""
+    return (
+        f"Números originais : {result.numbers}\n"
+        f"Binário gerado    : {result.encoded}\n"
+        f"Bits totais       : {result.total_bits}\n"
+        f"Taxa              : {result.rate:.2f} bits/símbolo"
+    )

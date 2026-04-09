@@ -1,76 +1,60 @@
 """
 Testes integrados para o módulo Elias-Gamma.
-
-Cobre:
-  - Codificação de inteiros positivos e geração de prefixos unários
-  - Decodificação e recuperação de valores (roundtrip)
-  - Inserção manual de erro em bits
-  - Verificação de falha/dessincronização na decodificação com erro
-  - Casos-limite (números pequenos, números grandes) e validações (N <= 0)
 """
 
 import pytest
-from src.encoders.elias_gamma import EliasGammaEncoder
-from src.decoders.elias_gamma_decoder import EliasGammaDecoder
+from src.encoders.elias_gamma import encode, EliasGammaResult
+from src.decoders.elias_gamma_decoder import decode, EliasGammaDecodeResult
 
-
-# ── helpers ───────────────────────────────────────────────────────────
 
 def flip_bit(binary: str, index: int) -> str:
-    """Inverte o bit na posição `index`."""
     bits = list(binary)
-    if bits[index] == "0":
-        bits[index] = "1"
-    else:
-        bits[index] = "0"
+    bits[index] = "1" if bits[index] == "0" else "0"
     return "".join(bits)
 
 
-# ── Encode ────────────────────────────────────────────────────────────
-
 class TestEncode:
-    def test_returns_string(self):
-        encoder = EliasGammaEncoder()
-        result = encoder.encode([5])
-        assert isinstance(result, str)
+    def test_returns_elias_gamma_result(self):
+        assert isinstance(encode([5]), EliasGammaResult)
 
     def test_encoded_is_binary_string(self):
-        encoder = EliasGammaEncoder()
-        encoded = encoder.encode([1, 10, 15])
-        assert all(bit in "01" for bit in encoded)
+        result = encode([1, 10, 15])
+        assert all(bit in "01" for bit in result.encoded)
 
     def test_known_values(self):
-        encoder = EliasGammaEncoder()
-        # 1 em binário é '1'. Tamanho 1. Zero zeros = "1"
-        assert encoder.encode([1]) == "1"
-        # 2 em binário é '10'. Tamanho 2. Um zero = "010"
-        assert encoder.encode([2]) == "010"
-        # 5 em binário é '101'. Tamanho 3. Dois zeros = "00101"
-        assert encoder.encode([5]) == "00101"
-        # 9 em binário é '1001'. Tamanho 4. Três zeros = "0001001"
-        assert encoder.encode([9]) == "0001001"
+        assert encode([1]).encoded == "1"
+        assert encode([2]).encoded == "010"
+        assert encode([5]).encoded == "00101"
+        assert encode([9]).encoded == "0001001"
 
+    def test_result_fields(self):
+        result = encode([1, 2, 3])
+        assert result.numbers == [1, 2, 3]
+        assert result.total_bits == len(result.encoded)
+        assert result.rate > 0
 
-# ── Decode ────────────────────────────────────────────────────────────
 
 class TestDecode:
+    def test_returns_elias_gamma_decode_result(self):
+        assert isinstance(decode("1"), EliasGammaDecodeResult)
+
     def test_simple_decode(self):
-        decoder = EliasGammaDecoder()
-        # "1" -> 1, "010" -> 2, "00101" -> 5
-        assert decoder.decode("101000101") == [1, 2, 5]
+        assert decode("101000101").numbers == [1, 2, 5]
+
+    def test_decode_result_fields(self):
+        result = decode("1")
+        assert result.binary == "1"
+        assert result.total_bits == 1
+        assert result.numbers == [1]
 
     def test_invalid_trailing_bits(self):
-        decoder = EliasGammaDecoder()
-        # "001" -> Indica 2 zeros (tamanho 3), mas só tem 3 bits no total (precisaria de 5)
-        with pytest.raises(ValueError, match="malformada"):
-            decoder.decode("001")
+        with pytest.raises(ValueError):
+            decode("001")
 
-    def test_empty_binary_returns_empty_list(self):
-        decoder = EliasGammaDecoder()
-        assert decoder.decode("") == []
+    def test_empty_binary_raises(self):
+        with pytest.raises(ValueError):
+            decode("")
 
-
-# ── Roundtrip (encode → decode) SEM erro ──────────────────────────────
 
 class TestRoundtripNoError:
     @pytest.mark.parametrize("numbers", [
@@ -81,72 +65,46 @@ class TestRoundtripNoError:
         [7, 14, 21, 28, 35],
     ])
     def test_roundtrip(self, numbers):
-        encoder = EliasGammaEncoder()
-        decoder = EliasGammaDecoder()
-        
-        encoded = encoder.encode(numbers)
-        decoded = decoder.decode(encoded)
-        assert decoded == numbers
+        result = encode(numbers)
+        assert decode(result.encoded).numbers == numbers
 
-
-# ── Roundtrip COM inserção de erro em bits ─────────────────────────────
 
 class TestRoundtripWithError:
     def test_single_bit_flip_detected(self):
-        encoder = EliasGammaEncoder()
-        decoder = EliasGammaDecoder()
-        
         numbers = [10, 20, 30]
-        encoded = encoder.encode(numbers)
-        corrupted = flip_bit(encoded, 0)
-        
-        assert corrupted != encoded
-
+        result = encode(numbers)
+        corrupted = flip_bit(result.encoded, 0)
+        assert corrupted != result.encoded
         try:
-            decoded = decoder.decode(corrupted)
-            assert decoded != numbers, (
-                "Esperava-se que os números decodificados fossem diferentes após flip de bit.")
+            assert decode(corrupted).numbers != numbers
         except ValueError:
-            pass  
+            pass
 
     def test_manual_error_indices(self):
-        encoder = EliasGammaEncoder()
-        decoder = EliasGammaDecoder()
-        
         numbers = [5, 15, 25]
-        encoded = encoder.encode(numbers)
-        error_indices = [1, 3]
-
-        corrupted = encoded
-        for idx in error_indices:
+        result = encode(numbers)
+        corrupted = result.encoded
+        for idx in [1, 3]:
             if idx < len(corrupted):
                 corrupted = flip_bit(corrupted, idx)
-
-        assert corrupted != encoded
-
+        assert corrupted != result.encoded
         try:
-            decoded = decoder.decode(corrupted)
-            assert decoded != numbers
+            assert decode(corrupted).numbers != numbers
         except ValueError:
             pass
 
 
-# ── Validações de entrada ──────────────────────────────────────────────
-
 class TestValidation:
     def test_encode_zero_raises(self):
-        encoder = EliasGammaEncoder()
         with pytest.raises(ValueError):
-            encoder.encode([0])
+            encode([0])
 
     def test_encode_negative_raises(self):
-        encoder = EliasGammaEncoder()
         with pytest.raises(ValueError):
-            encoder.encode([5, -2, 10])
+            encode([5, -2, 10])
 
     def test_encode_non_integer_raises(self):
-        encoder = EliasGammaEncoder()
         with pytest.raises(ValueError):
-            encoder.encode([1, "dois", 3])
+            encode([1, "dois", 3])
         with pytest.raises(ValueError):
-            encoder.encode([1.5, 2])
+            encode([1.5, 2])
