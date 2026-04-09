@@ -16,6 +16,7 @@ Layout:
 import sys
 import tkinter as tk
 from io import StringIO
+from dataclasses import replace
 
 import customtkinter
 from src.encoders import golomb as golomb_encoder, elias_gamma as elias_gamma_encoder, fibonacci as fibonacci_encoder, huffman as huffman_encoder
@@ -269,6 +270,20 @@ class EncoderApp(customtkinter.CTk):
 
     def _change_scaling(self, value: str):
         customtkinter.set_widget_scaling(int(value.replace("%", "")) / 100)
+    
+    def _apply_force_error_to_result(self, result):
+        indices = self._get_force_error_indices()
+        if not indices:
+            return result
+
+        corrupted = self._inject_errors(result.encoded, indices)
+
+        replace_kwargs = {"encoded": corrupted}
+
+        if hasattr(result, "encoded_parts"):
+            replace_kwargs["encoded_parts"] = corrupted.split()
+
+        return replace(result, **replace_kwargs)
 
     # ─────────────── placeholder helpers ─────────────────────────────
 
@@ -347,18 +362,27 @@ class EncoderApp(customtkinter.CTk):
             sys.stdout = old_stdout
 
         output_str = buf.getvalue().strip()
-        
-        error_raw = self._error_entry.get().strip()
-        placeholder = "Ex: 0, 3, 5"
-        if op == "encode" and error_raw and error_raw != placeholder:
-            try:
-                indices = [int(x.strip()) for x in error_raw.split(",")]
-                output_str = self._inject_errors(output_str, indices)
-            except ValueError:
-                self._show_error("⚠ Índices de erro inválidos. Use números inteiros separados por vírgula.")
-                return
-
         self._set_output(output_str)
+
+    def _get_force_error_indices(self) -> list[int]:
+        error_raw = self._error_entry.get().strip()
+
+        if not error_raw:
+            return []
+
+        try:
+            indices = [int(x.strip()) for x in error_raw.split(",")]
+        except ValueError as exc:
+            raise ValueError(
+                "Índices de erro inválidos. Use números inteiros separados por vírgula."
+            ) from exc
+
+        if any(idx < 0 for idx in indices):
+            raise ValueError(
+                "Os índices de erro devem ser inteiros maiores ou iguais a zero."
+            )
+
+        return indices
 
     def _inject_errors(self, string: str, indices: list[int]) -> str:
         char_list = list(string)
@@ -375,17 +399,21 @@ class EncoderApp(customtkinter.CTk):
     def _run_encode(self, algo: str, raw: str):
         if algo == "Huffman":
             result = huffman_encoder.encode(raw)
+            result = self._apply_force_error_to_result(result)
             print(huffman_encoder.format_result(result))
         else:
             numbers = self._parse_numbers(raw, allow_zero=False)
             if algo == "Golomb":
                 result = golomb_encoder.encode(numbers, m=self._get_m())
+                result = self._apply_force_error_to_result(result)
                 print(golomb_encoder.format_result(result))
             elif algo == "Elias-Gamma":
                 result = elias_gamma_encoder.encode(numbers)
+                result = self._apply_force_error_to_result(result)
                 print(elias_gamma_encoder.format_result(result))
             elif algo == "Fibonacci/Zeckendorf":
                 result = fibonacci_encoder.encode(numbers)
+                result = self._apply_force_error_to_result(result)
                 print(fibonacci_encoder.format_result(result))
 
     def _run_decode(self, algo: str, raw: str):
