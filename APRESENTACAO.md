@@ -64,7 +64,6 @@ algoritmos-de-codificacao/
 | Computacao numerica| NumPy                 | 1.24.0        | Calculos auxiliares                      |
 | Interface grafica  | CustomTKinter         | 5.2.2         | GUI multiplataforma com tema moderno     |
 | Testes             | pytest                | 7.4.0         | Execucao dos testes automatizados        |
-| Cobertura          | pytest-cov            | 4.1.0         | Relatorio de cobertura de testes         |
 
 ---
 
@@ -499,7 +498,6 @@ Os testes ficam em `/tests/` e cobrem as seguintes categorias para cada algoritm
 | `TestRoundtripErrors` | Injecao de bit flip, verificacao que dados corrompidos diferem/erram         |
 | `TestValidation`      | Rejeicao de zero, negativos, booleanos, vazios, tipos incorretos             |
 | `TestFrequencyTable`  | Contagem de frequencias (Huffman)                                            |
-| `TestTree/CodeTable`  | Construcao da arvore e propriedade prefix-free (Huffman)                     |
 
 ```bash
 # Executar testes de um algoritmo especifico
