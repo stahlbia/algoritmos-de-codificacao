@@ -1,6 +1,6 @@
 # Algoritmos de Codificação
 
-Implementação em Python de algoritmos clássicos de codificação: **Golomb**, **Elias-Gamma**, **Fibonacci/Zeckendorf** e **Huffman**.
+Implementação em Python de algoritmos clássicos de codificação: **Golomb**, **Elias-Gamma**, **Fibonacci/Zeckendorf** e **Huffman**. Feito por Ana Beatriz Stahl, Emanuele Schlemmer Thomazzoni, Gabriela Bley Rodrigues e Luisa Becker dos Santos.
 
 ## 📋 Descrição
 
@@ -10,8 +10,6 @@ Este projeto fornece implementações completas e testadas de algoritmos de codi
 - ✅ Codificar dados usando diferentes algoritmos
 - ✅ Decodificar strings binárias de volta aos dados originais
 - ✅ Visualizar resultados e estatísticas de compressão
-- ✅ Ver árvore de Huffman graficamente
-- ✅ Comparar eficiência de diferentes métodos
 - ✅ Copiar resultados facilmente
 
 ### 🎨 Interfaces Disponíveis
@@ -22,7 +20,6 @@ Este projeto fornece implementações completas e testadas de algoritmos de codi
    - Abas separadas para codificação e decodificação
 
 2. **CLI (Command Line Interface)** - Interface de terminal
-   - Ideal para automação e uso em scripts
    - Menu interativo no terminal
 
 ## 🚀 Instalação
@@ -39,6 +36,12 @@ Este projeto fornece implementações completas e testadas de algoritmos de codi
 git clone https://github.com/stahlbia/algoritmos-de-codificacao.git
 cd algoritmos-de-codificacao
 
+# Opcional - Criar um ambiente virtual para o python
+python -m venv .venv
+
+# Opcional - Ativar o ambiente virtual
+source .venv/bin/activate
+
 # Instale as dependências
 pip install -r requirements.txt
 
@@ -53,24 +56,14 @@ pip install -e .
 Execute a interface gráfica:
 
 ```bash
-python run_gui.py
+python -m run_gui
 ```
-
-A GUI oferece:
-
-- 🎨 Interface visual intuitiva
-- 📊 Visualização de resultados em tempo real
-- 📋 Copiar resultados facilmente
-- 🌳 Visualização da árvore de Huffman
-- 📈 Estatísticas de compressão
-
 
 ## Demonstração da interface gráfica
 
-
 ### 1. Tela inicial da aplicação
 
-![Tela inicial da GUI](docs/images/gui-home.png) 
+![Tela inicial da GUI](docs/images/gui-home.png)
 
 Visão geral da interface, com seleção de algoritmo, entrada de dados e área de resultado.
 
@@ -129,13 +122,7 @@ Visão geral da interface, com seleção de algoritmo, entrada de dados e área 
 Execute a interface de terminal:
 
 ```bash
-python -m src.interface.cli
-```
-
-Ou, se instalado via setup.py:
-
-```bash
-encode
+python -m run_cli
 ```
 
 ### Menu Interativo
@@ -245,7 +232,6 @@ print(encoder.visualize_tree())
 - Auto-delimitante
 - Eficiente para números pequenos
 - Codifica comprimento em unário + valor em binário
-- 
 
 **Complexidade**: O(log n)
 
@@ -282,7 +268,6 @@ algoritmos-de-codificacao/
 │   ├── __init__.py
 │   ├── encoders/
 │   │   ├── __init__.py
-│   │   ├── base_encoder.py       # Classe base abstrata
 │   │   ├── golomb.py             # Implementação Golomb
 │   │   ├── elias_gamma.py        # Implementação Elias-Gamma
 │   │   ├── fibonacci.py          # Implementação Fibonacci
@@ -294,7 +279,7 @@ algoritmos-de-codificacao/
 │   │   └── huffman_decoder.py            
 │   ├── interface/
 │   │   ├── __init__.py
-│   │   ├── gui.py 
+│   │   ├── gui.py                # Interface GUI
 │   │   └── cli.py                # Interface CLI
 │   └── utils/
 │       ├── __init__.py
@@ -307,7 +292,7 @@ algoritmos-de-codificacao/
 │   ├── test_fibonacci.py
 │   └── test_huffman.py
 ├── requirements.txt
-├── setup.py
+├── run_cli.py
 ├── run_gui.py
 ├── .gitignore
 └── README.md
@@ -328,40 +313,6 @@ pytest --cov=src
 pytest tests/test_huffman.py
 ```
 
-```
-
-## 🛠️ Desenvolvimento
-
-### Configuração do Ambiente
-
-```bash
-# Criar ambiente virtual
-python -m venv venv
-
-# Ativar ambiente virtual
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Instalar dependências de desenvolvimento
-pip install -r requirements.txt
-pip install -e ".[dev]"
-```
-
-### Formatação de Código
-
-```bash
-# Formatar código com black
-black src/ tests/
-
-# Verificar estilo com flake8
-flake8 src/ tests/
-
-# Verificar tipos com mypy
-mypy src/
-```
-
 ## 📊 Comparação de Algoritmos
 
 | Algoritmo | Tipo | Entrada | Parâmetros | Melhor Para |
@@ -370,22 +321,6 @@ mypy src/
 | **Elias-Gamma** | Universal | Positivos | Nenhum | Números pequenos |
 | **Fibonacci** | Universal | Positivos | Nenhum | Representação única |
 | **Huffman** | Estatístico | Texto/símbolos | Nenhum | Dados com frequências variadas |
-
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Por favor:
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/NovaFeature`)
-3. Commit suas mudanças (`git commit -m 'Adicionando uma NovaFeature'`)
-4. Push para a branch (`git push origin feature/NovaFeature`)
-5. Abra um Pull Request
-
-
-## 📧 Contato
-
-- GitHub: [@stahlbia](https://github.com/stahlbia)
-- Repositório: [algoritmos-de-codificacao](https://github.com/stahlbia/algoritmos-de-codificacao)
 
 ## 🔗 Referências
 

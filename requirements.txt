@@ -5,11 +5,6 @@ numpy>=1.24.0
 pytest>=7.4.0
 pytest-cov>=4.1.0
 
-# Code quality
-black>=23.0.0
-flake8>=6.0.0
-mypy>=1.5.0
-
 # GUI dependencies
 customtkinter>=5.2.2
 # tkinter is included in the standard Python installation
