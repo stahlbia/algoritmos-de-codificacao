@@ -131,25 +131,25 @@ As validacoes sao aplicadas antes de qualquer processamento, tanto na GUI quanto
 |--------------------------------------|--------------------------------------------------------------------|
 | Entrada nao pode ser vazia           | `A entrada nao pode estar vazia.`                                  |
 | Apenas inteiros positivos (> 0)      | `Este algoritmo requer numeros positivos (> 0).`                   |
-| Nao aceita booleanos                 | Erro de tipo antes do processamento                                |
-| Nao aceita floats ou strings         | Erro de tipo antes do processamento                                |
+| Nao aceita booleanos                 | Transforma em int para conseguir processar                         |
+| Nao aceita floats ou strings         | `Entrada inválida — use números inteiros separados por espaço.`    |
 | Parametro `m` do Golomb deve ser > 0 | `Parametro m deve ser um inteiro positivo.`                        |
 
 ### Huffman — Codificar
 
-| Regra                     | Mensagem de erro                        |
-|---------------------------|-----------------------------------------|
-| Texto nao pode estar vazio| `A entrada nao pode estar vazia.`       |
-| Deve ser string           | Erro de tipo antes do processamento     |
+| Regra                     | Mensagem de erro                                |
+|---------------------------|-------------------------------------------------|
+| Texto nao pode estar vazio| `A entrada nao pode estar vazia.`               |
+| Deve ser string           | Transforma em string para conseguir processar   |
 
 ### Huffman — Decodificar
 
-| Regra                                     | Mensagem de erro                                          |
-|-------------------------------------------|-----------------------------------------------------------|
-| Codigo binario so aceita `0` e `1`        | `Codigo binario invalido — use apenas 0 e 1.`             |
-| Tabela de codigos nao pode ser vazia      | Validado antes do processamento                           |
-| Tabela deve ser prefix-free               | Validado ao construir a tabela                            |
-| Todos os bits devem ser consumidos        | Erro se sobrar bits sem correspondencia na tabela         |
+| Regra                                     | Mensagem de erro                                                        |
+|-------------------------------------------|-------------------------------------------------------------------------|
+| Codigo binario so aceita `0` e `1`        | `Codigo binario invalido — use apenas 0 e 1.`                           |
+| Tabela de codigos nao pode ser vazia      | Validado antes do processamento                                         |
+| Tabela deve ser prefix-free               | Validado ao construir a tabela                                          |
+| Todos os bits devem ser consumidos        | `Sequência binária inválida: sobrou '{buffer}' sem correspondência.`    |
 
 ### Decodificacao Binaria (todos os algoritmos)
 
