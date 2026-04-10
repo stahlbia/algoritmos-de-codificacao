@@ -2,11 +2,11 @@
 Golomb decoding implementation.
 
 Convenção adotada neste projeto:
-- o código Golomb representa inteiros positivos (> 0);
-- internamente a codificação foi feita sobre (n - 1);
+- o código Golomb representa inteiros não negativos (>= 0);
+- internamente a codificação é feita sobre o valor direto;
 - portanto, ao decodificar:
     valor_interno = q * m + r
-    n = valor_interno + 1
+    n = valor_interno
 """
 
 import math
@@ -101,8 +101,7 @@ def decode(binary: str, m: int = 4) -> GolombDecodeResult:
 
         value = q * m + r
 
-        # Como o encoder codifica (n - 1), aqui voltamos para n.
-        n = value + 1
+        n = value
         decoded_numbers.append(n)
 
     return GolombDecodeResult(

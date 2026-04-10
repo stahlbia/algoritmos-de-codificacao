@@ -64,6 +64,66 @@ A GUI oferece:
 - 🌳 Visualização da árvore de Huffman
 - 📈 Estatísticas de compressão
 
+
+## Demonstração da interface gráfica
+
+
+### 1. Tela inicial da aplicação
+
+![Tela inicial da GUI](docs/images/gui-home.png) 
+
+Visão geral da interface, com seleção de algoritmo, entrada de dados e área de resultado.
+
+### 2. Exemplo de codificação com Golomb
+
+![Exemplo com Golomb](docs/images/gui-golomb.png)
+
+**Sugestão de legenda:** uso do parâmetro `m` e codificação de uma sequência de números inteiros não negativos.
+
+### 3. Exemplo de decodificação com Golomb
+
+![Exemplo com Golomb](docs/images/gui-dgolomb.png)
+
+**Sugestão de legenda:** uso do parâmetro `m` e decodificação de uma sequência de números inteiros não negativos.
+
+### 4. Exemplo de codificação com Elias-Gamma
+
+![Exemplo com Huffman](docs/images/gui-elias-gamma.png)
+
+**Sugestão de legenda:** codificação de texto, tabela de códigos gerada e análise visual do resultado.
+
+### 5. Exemplo de decodificação com Elias-Gamma
+
+![Exemplo com Huffman](docs/images/gui-delias-gamma.png)
+
+**Sugestão de legenda:** codificação de texto, tabela de códigos gerada e análise visual do resultado.
+
+### 6. Exemplo de codificação com Fibonacci
+
+![Exemplo com Golomb](docs/images/gui-fibonacci.png)
+
+**Sugestão de legenda:** uso do parâmetro `m` e codificação de uma sequência de números inteiros não negativos.
+
+### 7. Exemplo de decodificação com Fibonacci
+
+![Exemplo com Golomb](docs/images/gui-dfibonacci.png)
+
+**Sugestão de legenda:** uso do parâmetro `m` e decodificação de uma sequência de números inteiros não negativos.
+
+### 8. Exemplo de codificação com Huffman
+
+![Exemplo com Huffman](docs/images/gui-huffman.png)
+
+**Sugestão de legenda:** codificação de texto, tabela de códigos gerada e análise visual do resultado.
+
+### 9. Exemplo de decodificação com Huffman
+
+![Exemplo com Huffman](docs/images/gui-dhuffman.png)
+
+**Sugestão de legenda:** codificação de texto, tabela de códigos gerada e análise visual do resultado.
+
+---
+
 ### Interface de Linha de Comando (CLI)
 
 Execute a interface de terminal:
@@ -165,13 +225,14 @@ print(encoder.visualize_tree())
 
 ### 1. Golomb
 
-**Descrição**: Algoritmo de compressão com parâmetro ajustável `m`. Ideal para distribuições geométricas.
+**Descrição**: Algoritmo de compressão com parâmetro ajustável `m`. Indicado para codificação de inteiros não negativos, especialmente em cenários em que os dados seguem distribuição geométrica.
 
 **Características**:
 
 - Parâmetro `m` ajustável
 - Codifica números não-negativos
 - Divide números em quociente (unário) e resto (binário)
+- Entrada esperada de inteiros > 0
 
 **Complexidade**: O(n) onde n é o valor a codificar
 
@@ -184,6 +245,7 @@ print(encoder.visualize_tree())
 - Auto-delimitante
 - Eficiente para números pequenos
 - Codifica comprimento em unário + valor em binário
+- 
 
 **Complexidade**: O(log n)
 

@@ -34,7 +34,7 @@ def flip_bit(binary: str, index: int) -> str:
 
 class TestEncodeSingle:
     def test_encode_1_m4(self):
-        assert encode(1, m=4).encoded == "000"
+        assert encode(1, m=4).encoded == "001"
 
     def test_returns_golomb_result(self):
         result = encode(5, m=4)
@@ -46,12 +46,12 @@ class TestEncodeSingle:
         assert all(c in "01 " for c in result.encoded)
 
     def test_encode_m1(self):
-        assert encode(1, m=1).encoded == "0"
-        assert encode(3, m=1).encoded == "110"
+        assert encode(1, m=1).encoded == "10"
+        assert encode(3, m=1).encoded == "1110"
 
     def test_encode_m2(self):
-        assert encode(1, m=2).encoded == "00"
-        assert encode(2, m=2).encoded == "01"
+        assert encode(1, m=2).encoded == "01"
+        assert encode(2, m=2).encoded == "10"
 
     def test_result_fields(self):
         result = encode(5, m=4)
@@ -72,7 +72,7 @@ class TestEncodeList:
     def test_encode_list_m1(self):
         result = encode([1, 2, 3], m=1)
         parts = result.encoded.split()
-        assert parts == ["0", "10", "110"]
+        assert parts == ["10", "110", "1110"]
 
 
 # ── Decode ────────────────────────────────────────────────────────────
@@ -83,15 +83,15 @@ class TestDecode:
         assert isinstance(result, GolombDecodeResult)
 
     def test_decode_single(self):
-        assert decode("000", m=4).numbers == [1]
+        assert decode("000", m=4).numbers == [0]
 
     def test_decode_m1(self):
-        assert decode("0", m=1).numbers == [1]
-        assert decode("110", m=1).numbers == [3]
+        assert decode("0", m=1).numbers == [0]
+        assert decode("110", m=1).numbers == [2]
 
     def test_decode_m2(self):
-        assert decode("00", m=2).numbers == [1]
-        assert decode("01", m=2).numbers == [2]
+        assert decode("00", m=2).numbers == [0]
+        assert decode("01", m=2).numbers == [1]
 
     def test_decode_result_fields(self):
         result = decode("000", m=4)
@@ -109,7 +109,7 @@ class TestDecode:
 class TestRoundtripNoError:
     @pytest.mark.parametrize("m", [1, 2, 3, 4, 5, 7, 8, 16])
     def test_roundtrip_single(self, m):
-        for n in [1, 2, 3, 5, 10, 20]:
+        for n in [0, 1, 2, 3, 5, 10, 20]:
             encoded = encode(n, m=m).encoded.replace(" ", "")
             decoded = decode(encoded, m=m).numbers
             assert decoded == [n], f"Falha: n={n}, m={m}"
@@ -178,9 +178,9 @@ class TestNonPowerOfTwo:
 # ── Validações de entrada ──────────────────────────────────────────────
 
 class TestValidation:
-    def test_encode_zero_raises(self):
-        with pytest.raises(ValueError):
-            encode(0, m=4)
+    def test_encode_zero(self):
+        result = encode(0, m=4)
+        assert result.encoded == "000"
 
     def test_encode_negative_raises(self):
         with pytest.raises(ValueError):

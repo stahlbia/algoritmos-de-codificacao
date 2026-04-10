@@ -2,12 +2,10 @@
 Golomb encoding implementation.
 
 Convenção adotada neste projeto:
-- a entrada do Golomb deve ser composta por inteiros positivos (> 0),
-  conforme o enunciado do trabalho;
-- para compatibilizar essa exigência com a formulação do algoritmo,
-  codificamos internamente (n - 1);
+- a entrada do Golomb deve ser composta por inteiros não negativos (>= 0);
+- o algoritmo codifica o valor diretamente, sem deslocamento interno;
 - portanto:
-    valor_interno = n - 1
+    valor_interno = n
     q = valor_interno // m
     r = valor_interno % m
 """
@@ -45,8 +43,8 @@ def _normalize_numbers(numbers: Union[int, List[int]]) -> List[int]:
     for n in numbers:
         if not isinstance(n, int) or isinstance(n, bool):
             raise TypeError("Todos os valores devem ser inteiros.")
-        if n <= 0:
-            raise ValueError("O algoritmo Golomb requer números inteiros positivos (> 0).")
+        if n < 0:
+            raise ValueError("O algoritmo Golomb requer números inteiros não negativos (>= 0).")
         normalized.append(n)
 
     return normalized
@@ -54,10 +52,10 @@ def _normalize_numbers(numbers: Union[int, List[int]]) -> List[int]:
 
 def encode(numbers: Union[int, List[int]], m: int = 4) -> GolombResult:
     """
-    Encode positive integer(s) using Golomb coding.
+    Encode non-negative integer(s) using Golomb coding.
 
     Args:
-        numbers: Single positive integer or list of positive integers
+        numbers: Single non-negative integer or list of non-negative integers
         m: Golomb parameter (positive integer)
 
     Returns:
@@ -72,7 +70,7 @@ def encode(numbers: Union[int, List[int]], m: int = 4) -> GolombResult:
     encoded_parts = []
 
     for n in numbers:
-        value = n - 1
+        value = n
         q = value // m
         r = value % m
 
