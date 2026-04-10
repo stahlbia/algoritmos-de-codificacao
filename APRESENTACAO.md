@@ -61,7 +61,6 @@ algoritmos-de-codificacao/
 | Categoria          | Tecnologia            | Versao Minima | Uso                                      |
 |--------------------|-----------------------|---------------|------------------------------------------|
 | Linguagem          | Python                | 3.8+          | Toda a implementacao                     |
-| Computacao numerica| NumPy                 | 1.24.0        | Calculos auxiliares                      |
 | Interface grafica  | CustomTKinter         | 5.2.2         | GUI multiplataforma com tema moderno     |
 | Testes             | pytest                | 7.4.0         | Execucao dos testes automatizados        |
 
